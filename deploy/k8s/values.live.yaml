@@ -1,0 +1,22 @@
+image:
+  pullSecrets:
+    - name: mareshq-gitlab-registry
+
+replicas: 2
+
+ingress:
+  host: next-isr-bug.vmdevel.cz
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-dns-production
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+
+config:
+  apiKey: "random-api-key"
+
+  cms:
+    apiURL: "https://cms.mareshq.com/api"
+    apiToken: "fed52c34ec97b01ff148a7a7cebbc05903cfe774873651e876e2f77a9a19238c7372d751db5af81bc668aa08baf3d9ceb3696e955962474a6bd271125a6bb5029a1f1921ef435f63eaa52585fa82d3f655e6f8bd17e62921a13bb62bf1ed5d3aa268dbbe76799b53fb9943f8b7c42a3a49fd7f0bf94eba3da435a223fde7cf11"
+
+cron:
+  refreshBlog:
+    enabled: true

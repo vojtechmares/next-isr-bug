@@ -1,0 +1,112 @@
+default:
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/node:22
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+    paths:
+      - .pnpm-store
+      - node_modules
+
+variables:
+  IMAGE: $CI_REGISTRY_IMAGE
+  TAG: $CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
+
+stages:
+  - install
+  - test
+  - build
+  - deploy
+
+.before_script: &pnpm_before_script
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@latest-9 --activate
+    - pnpm config set store-dir .pnpm-store
+    - SHELL="$(which bash)" pnpm setup
+    - source ~/.bashrc
+
+install:
+  stage: install
+  script:
+    - pnpm install --frozen-lockfile
+  <<: *pnpm_before_script
+
+format:
+  stage: test
+  script:
+    - pnpm run format:check
+  <<: *pnpm_before_script
+
+lint:
+  stage: test
+  script:
+    - pnpm run lint
+  <<: *pnpm_before_script
+
+test:helm:
+  stage: test
+  image: ghcr.io/vojtechmares/toolkit:latest
+  tags:
+    - amd64 # temp fix before I create multi-platform image
+  script:
+    - helm lint ./deploy/k8s
+    - helm template website ./deploy/k8s
+  cache: []
+
+build:docker:arm64:
+  stage: build
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:git
+  tags:
+    - arm64
+  before_script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - docker info
+  script:
+    - >
+      docker build --push \
+        --provenance=false \
+        --build-arg CMS_API_TOKEN=$CMS_API_TOKEN \
+        -t $IMAGE:$TAG-arm64 .
+  # no cache is needed here
+  # this makes job faster, since it does not have to pull the cache
+  cache: []
+
+build:docker:manifest:
+  stage: build
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:git
+  before_script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - docker info
+  script:
+    - >
+      docker manifest create $IMAGE:$TAG \
+        $IMAGE:$TAG-arm64
+    - docker manifest push $IMAGE:$TAG
+    - docker manifest inspect $IMAGE:$TAG
+  # no cache is needed here
+  # this makes job faster, since it does not have to pull the cache
+  cache: []
+  needs:
+    - job: build:docker:arm64
+
+deploy:
+  stage: deploy
+  image: ghcr.io/vojtechmares/toolkit:latest
+  tags:
+    - amd64 # temp fix before I create multi-platform image
+  variables:
+    GIT_DEPTH: 1 # shallow clone
+  script: >
+    helm upgrade --install --namespace next-isr-bug \
+      website ./deploy/k8s \
+      --wait \
+      --values ./deploy/k8s/values.live.yaml \
+      --set image.tag=$TAG
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main'
+  environment:
+    name: live
+    url: https://next-isr-bug.vmdevel.cz
+  interruptible: true
+  cache: []
