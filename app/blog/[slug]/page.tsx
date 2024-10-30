@@ -31,9 +31,7 @@ export async function generateMetadata(props: {
   const article = await strapi.getArticle(slug);
 
   return {
-    title:
-      article.title +
-      " | John Doe",
+    title: article.title + " | John Doe",
     description: article.description,
     keywords: article.keywords,
     alternates: {

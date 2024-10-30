@@ -10,7 +10,7 @@ export function Hero() {
         <div className="flex flex-col justify-center md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="font-display text-4xl font-black tracking-tight text-black sm:text-7xl">
-              Hi, I'm{" "}
+              Hi, I&apos;m{" "}
               <span className="relative whitespace-nowrap text-amber-500">
                 <svg
                   aria-hidden="true"
@@ -24,10 +24,8 @@ export function Hero() {
               </span>
               , DevOps architect.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg text-slate-700">
-              Lorem Ipsum
-            </p>
-            <div className="mt-10 mb-10 flex flex-col gap-y-6 sm:flex-row sm:justify-start sm:gap-x-6 md:gap-y-0">
+            <p className="mt-6 max-w-2xl text-lg text-slate-700">Lorem Ipsum</p>
+            <div className="mb-10 mt-10 flex flex-col gap-y-6 sm:flex-row sm:justify-start sm:gap-x-6 md:gap-y-0">
               <Button href="#" size="large">
                 Schedule a call
               </Button>

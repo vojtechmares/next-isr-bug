@@ -34,7 +34,6 @@ export const metadata: Metadata = {
 };
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
-
   return (
     <html
       className="h-full scroll-smooth bg-white antialiased [font-feature-settings:'ss01']"
