@@ -2,7 +2,7 @@ replicas: 1
 
 image:
   pullPolicy: IfNotPresent
-  repository: registry.mareshq.com/hq/website
+  repository: registry.mareshq.com/lab/next-isr-bug
   tag: latest
   pullSecrets: []
 
